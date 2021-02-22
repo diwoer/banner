@@ -1,4 +1,4 @@
-package com.di.view.banner;
+package com.di.view.banner.data;
 
 import android.widget.ImageView;
 

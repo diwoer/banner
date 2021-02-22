@@ -1,6 +1,7 @@
 package com.di.view.banner;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -11,6 +12,11 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewpager.widget.ViewPager;
+
+import com.di.view.banner.adapter.BannerAdapter;
+import com.di.view.banner.data.BannerImage;
+import com.di.view.banner.indicator.Indicator;
+import com.di.view.banner.style.BannerStyleWrapper;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -27,6 +33,7 @@ public class BannerLayout extends FrameLayout implements ViewPager.OnPageChangeL
     private ViewPager viewPager;
     private BannerAdapter imageViewAdapter;
     private Indicator indicator;
+    private BannerClickListener bannerClickListener;
 
     private final List<BannerImage> dataList = new ArrayList<>();
 
@@ -46,6 +53,7 @@ public class BannerLayout extends FrameLayout implements ViewPager.OnPageChangeL
 
     public BannerLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        setBackgroundColor(Color.TRANSPARENT);
         weakRunnable = new WeakRunnable(this);
         buildViewPager();
     }
@@ -59,7 +67,7 @@ public class BannerLayout extends FrameLayout implements ViewPager.OnPageChangeL
 
     public void addIndicator(Indicator indicator) {
         this.indicator = indicator;
-        addView(indicator.getParentView(getContext()));
+        addView(indicator.getView(getContext()));
     }
 
     public <T, V extends View> void setAdapter(BannerAdapter<T, V> adapter) {
@@ -74,7 +82,7 @@ public class BannerLayout extends FrameLayout implements ViewPager.OnPageChangeL
 
     @Override
     public void onPageSelected(int position) {
-        indicator.update(dataList.size(), position % dataList.size(), lastPosition % dataList.size());
+        indicator.update(indicator, dataList.size(), position % dataList.size(), lastPosition % dataList.size());
         lastPosition = position;
     }
 
@@ -88,18 +96,26 @@ public class BannerLayout extends FrameLayout implements ViewPager.OnPageChangeL
         dataList.addAll(list);
 
         //设置indicator
-        indicator.clearStoredChildViews();
-        for (int i = 0; i < dataList.size(); i++) {
-            indicator.buildChild(getContext(), dataList.size(), i);
-        }
+        indicator.createView(getContext(), dataList.size());
 
+        if (bannerClickListener != null) {
+            imageViewAdapter.setBannerClickListener(bannerClickListener);
+        }
         imageViewAdapter.setData(dataList);
         viewPager.setCurrentItem(dataList.size() * 1000, false);
         startAutoPlay();
     }
 
-    private int dp2px(int dpValue) {
-        return (int) (getContext().getResources().getDisplayMetrics().density * dpValue + 0.5f);
+    public void setBannerClickListener(BannerClickListener listener) {
+        this.bannerClickListener = listener;
+    }
+
+    public void setStyle(BannerStyleWrapper bannerStyle) {
+        bannerStyle.setStyle(this);
+    }
+
+    public ViewPager getViewPager() {
+        return viewPager;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.di.view.banner;
+package com.di.view.banner.adapter;
 
 import android.content.Context;
 import android.util.Log;
@@ -7,6 +7,8 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.viewpager.widget.PagerAdapter;
+
+import com.di.view.banner.BannerClickListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +19,13 @@ public abstract class BannerAdapter<T, V extends View> extends PagerAdapter {
 
     private final ViewCreator<V> viewCreator;
     private final List<T> dataList;
+
+    private BannerClickListener bannerClickListener;
+
+    /**
+     * 圆角样式的弧度
+     * */
+    private int radius;
 
     private final Context context;
 
@@ -36,8 +45,16 @@ public abstract class BannerAdapter<T, V extends View> extends PagerAdapter {
         notifyDataSetChanged();
     }
 
+    public void setBannerClickListener(BannerClickListener listener) {
+        this.bannerClickListener = listener;
+    }
+
     public Context getContext() {
         return context;
+    }
+
+    public void setRadius(int radius) {
+        this.radius = radius;
     }
 
     @Override
@@ -53,10 +70,22 @@ public abstract class BannerAdapter<T, V extends View> extends PagerAdapter {
     @NonNull
     @Override
     public final Object instantiateItem(@NonNull ViewGroup container, int position) {
+
+        //获取View
         V contentView = viewCreator.get(position, createView());
         container.addView(contentView);
+
+        //设置View数据
         position %= dataList.size();
         setViews(contentView, dataList.get(position), position);
+
+        //设置点击事件
+        final int fPosition = position;
+        contentView.setOnClickListener(v -> {
+            if (bannerClickListener != null) {
+                bannerClickListener.onClick(fPosition);
+            }
+        });
         return contentView;
     }
 
